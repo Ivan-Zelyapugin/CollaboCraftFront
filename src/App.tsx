@@ -7,6 +7,7 @@ import { DocumentEditor } from './components/DocumentEditor';
 import * as authApi from './api/auth';
 import { startConnection, stopConnection, sendMessage, hubConnection } from './api/signalr';
 import { LoginModel, RegisterModel } from './models/auth';
+import { UserProfile } from './components/UserProfile';
 
 const AppContent: React.FC = () => {
   const [token, setToken] = useState<string | null>(null);
@@ -138,6 +139,10 @@ const AppContent: React.FC = () => {
           element={token ? <DocumentEditor /> : <Navigate to="/login" />}
         />
         <Route path="/" element={<Navigate to={token ? "/documents" : "/login"} />} />
+        <Route
+  path="/profile"
+  element={token ? <UserProfile /> : <Navigate to="/login" />}
+/>
       </Routes>
     </div>
   );

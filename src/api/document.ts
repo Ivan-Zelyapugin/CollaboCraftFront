@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { UserDocumentDto } from '../models/document';
 import { Document } from '../models/document';
 
 const api = axios.create({
@@ -23,8 +24,8 @@ api.interceptors.response.use(
   }
 );
 
-export const getMyDocuments = async (): Promise<Document[]> => {
-  const res = await api.get<Document[]>('/document/my');
+export const getMyDocuments = async (): Promise<UserDocumentDto[]> => {
+  const res = await api.get<UserDocumentDto[]>('/document/my');
   return res.data;
 };
 

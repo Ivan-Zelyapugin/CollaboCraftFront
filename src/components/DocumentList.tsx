@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getMyDocuments, deleteDocument } from '../api/document';
+import { getMyDocuments } from '../api/document';
 import { Document } from '../models/document';
+import { UserDocumentDto, DocumentRole } from '../models/document';
 import { sendMessage, hubConnection } from '../api/signalr';
 
 interface DocumentListProps {
@@ -9,27 +10,26 @@ interface DocumentListProps {
 }
 
 export const DocumentList: React.FC<DocumentListProps> = ({ onLogout }) => {
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<UserDocumentDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [newDocTitle, setNewDocTitle] = useState('');
-  const [newUserIds, setNewUserIds] = useState(''); // comma-separated
+  const [userInputs, setUserInputs] = useState([{ username: '', role: 'User' as DocumentRole }]);
 
   useEffect(() => {
     fetchDocuments();
 
     hubConnection.on('DocumentCreated', (doc: Document) => {
-      setDocuments(prev => [...prev, doc]);
+      setDocuments(prev => [...prev, { document: doc, role: 'Creator' }]);
     });
 
-    // 👇 Добавь это
     hubConnection.on('DocumentDeleted', (deletedId: number) => {
-      setDocuments(prev => prev.filter(doc => doc.id !== deletedId));
+      setDocuments(prev => prev.filter(d => d.document.id !== deletedId));
     });
 
     return () => {
       hubConnection.off('DocumentCreated');
-      hubConnection.off('DocumentDeleted'); // 👈 обязательно отписывайся
+      hubConnection.off('DocumentDeleted');
     };
   }, []);
 
@@ -44,24 +44,54 @@ export const DocumentList: React.FC<DocumentListProps> = ({ onLogout }) => {
     }
   };
 
+  const handleUserChange = (index: number, field: 'username' | 'role', value: string) => {
+  setUserInputs(prev => {
+    const updated = [...prev];
+    if (field === 'role') {
+      updated[index].role = value as DocumentRole;
+    } else {
+      updated[index].username = value;
+    }
+    return updated;
+  });
+};
+
+
+  const addUserInput = () => {
+    setUserInputs(prev => [...prev, { username: '', role: 'Viewer' }]);
+  };
+
+  const removeUserInput = (index: number) => {
+    setUserInputs(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleCreateDocument = async () => {
-  const usernames = newUserIds
-    .split(',')
-    .map(name => name.trim())
-    .filter(name => !!name);
+  const users = userInputs
+    .map(u => ({ username: u.username.trim(), role: u.role }))
+    .filter(u => u.username !== '');
 
   try {
     await sendMessage('CreateDocument', [{
       Name: newDocTitle,
-      Usernames: usernames,
+      Usernames: users.map(u => u.username),
+      Roles: users.map(u => u.role),
     }]);
     setShowForm(false);
     setNewDocTitle('');
-    setNewUserIds('');
-  } catch (err) {
+    setUserInputs([{ username: '', role: 'Viewer' }]);
+  } catch (err: any) {
     console.error('Failed to create document:', err);
+
+    if (err.message && err.message.includes('Пользователи не найдены:')) {
+      const match = err.message.match(/Пользователи не найдены:\s*(.*)/);
+      const notFound = match ? match[1] : '';
+      alert(`Документ не создан, но не удалось добавить следующих пользователей: ${notFound}`);
+    } else {
+      alert('Ошибка при создании документа. Попробуйте позже.');
+    }
   }
 };
+
 
   const handleDeleteDocument = async (id: number) => {
     const confirmed = window.confirm('Are you sure you want to delete this document?');
@@ -69,7 +99,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({ onLogout }) => {
 
     try {
       await sendMessage('DeleteDocument', [id]);
-      setDocuments(prev => prev.filter(doc => doc.id !== id));
+      setDocuments(prev => prev.filter(doc => doc.document.id !== id));
     } catch (err) {
       console.error('Failed to delete document:', err);
       alert('Failed to delete document.');
@@ -81,19 +111,26 @@ export const DocumentList: React.FC<DocumentListProps> = ({ onLogout }) => {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold">My Documents</h2>
         <div className="flex gap-2">
-          <button
-            onClick={() => setShowForm(prev => !prev)}
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-          >
-            {showForm ? 'Cancel' : 'Create Document'}
-          </button>
-          <button
-            onClick={onLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          >
-            Logout
-          </button>
-        </div>
+  <button
+    onClick={() => setShowForm(prev => !prev)}
+    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+  >
+    {showForm ? 'Cancel' : 'Create Document'}
+  </button>
+  <Link
+    to="/profile"
+    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+  >
+    Профиль
+  </Link>
+  <button
+    onClick={onLogout}
+    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+  >
+    Logout
+  </button>
+</div>
+
       </div>
 
       {showForm && (
@@ -102,17 +139,48 @@ export const DocumentList: React.FC<DocumentListProps> = ({ onLogout }) => {
           <input
             type="text"
             placeholder="Document title"
-            className="border px-2 py-1 w-full mb-2"
+            className="border px-2 py-1 w-full mb-4"
             value={newDocTitle}
             onChange={(e) => setNewDocTitle(e.target.value)}
           />
-          <input
-            type="text"
-            placeholder="Usernames (comma-separated)"
-            className="border px-2 py-1 w-full mb-2"
-            value={newUserIds}
-            onChange={(e) => setNewUserIds(e.target.value)}
-          />
+
+          <div className="space-y-2 mb-4">
+            {userInputs.map((input, index) => (
+              <div key={index} className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  placeholder="Username"
+                  className="border px-2 py-1 flex-1"
+                  value={input.username}
+                  onChange={(e) => handleUserChange(index, 'username', e.target.value)}
+                />
+                <select
+                  value={input.role}
+                  onChange={(e) => handleUserChange(index, 'role', e.target.value as DocumentRole)}
+                  className="border px-2 py-1"
+                >
+                  <option value="Viewer">Viewer</option>
+                  <option value="Editor">Editor</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => removeUserInput(index)}
+                  className="text-red-500 hover:text-red-700"
+                  title="Remove"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addUserInput}
+              className="text-blue-600 hover:underline text-sm"
+            >
+              + Add User
+            </button>
+          </div>
+
           <button
             onClick={handleCreateDocument}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
@@ -128,19 +196,22 @@ export const DocumentList: React.FC<DocumentListProps> = ({ onLogout }) => {
         <p>No documents found.</p>
       ) : (
         <ul className="space-y-2">
-          {documents.map((doc) => (
+          {documents.map(({ document, role }) => (
             <li
-              key={doc.id}
+              key={document.id}
               className="p-4 bg-white rounded shadow flex justify-between items-center"
             >
-              <Link
-                to={`/document/${doc.id}`}
-                className="text-blue-500 hover:underline"
-              >
-                {doc.name || '(No Name)'}
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  to={`/document/${document.id}`}
+                  className="text-blue-500 hover:underline"
+                >
+                  {document.name || '(No Name)'}
+                </Link>
+                <span className="text-sm text-gray-500">({role})</span>
+              </div>
               <button
-                onClick={() => handleDeleteDocument(doc.id)}
+                onClick={() => handleDeleteDocument(document.id)}
                 className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
               >
                 Delete
