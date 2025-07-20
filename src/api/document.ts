@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { UserDocumentDto } from '../models/document';
-import { Document } from '../models/document';
+import { UserDocumentDto, DocumentDetails } from '../models/document';
+import { DocumentRole } from '../models/document';
 
 const api = axios.create({
   baseURL: 'http://localhost:8080/api',
@@ -31,4 +31,9 @@ export const getMyDocuments = async (): Promise<UserDocumentDto[]> => {
 
 export const deleteDocument = async (id: number): Promise<void> => {
   await api.delete(`/document/${id}`);
+};
+
+export const getDocumentDetails = async (id: number): Promise<DocumentDetails> => {
+  const res = await api.get<DocumentDetails>(`/document/${id}`);
+  return res.data;
 };

@@ -22,7 +22,11 @@ export const sendMessage = async (method: string, args: any[]) => {
 
 
 export const startConnection = async () => {
-  if (isConnecting || hubConnection.state !== signalR.HubConnectionState.Disconnected) return;
+  if (isConnecting || hubConnection.state !== signalR.HubConnectionState.Disconnected) {
+    console.log(`[SignalR] Skip start: already in state ${hubConnection.state}`);
+    return;
+  }
+
   isConnecting = true;
   try {
     await hubConnection.start();
@@ -33,6 +37,7 @@ export const startConnection = async () => {
     isConnecting = false;
   }
 };
+
 
 export const stopConnection = async () => {
   if (hubConnection.state === signalR.HubConnectionState.Connected) {

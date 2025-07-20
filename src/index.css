@@ -3,45 +3,14 @@
 @tailwind utilities;
 
 @layer utilities {
-  @media screen {
-    .page {
-      width: 794px;
-      height: 1123px;
-      padding: 2rem;
-      margin: 1rem auto;
-      background: white;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-    }
-  }
-
-  @media print {
-    .page {
-      width: 210mm;
-      height: 297mm;
-      padding: 20mm;
-      margin: 0;
-      page-break-after: always;
-      box-shadow: none;
-      background: white;
-    }
-
-    html, body {
-      width: 210mm;
-      height: 297mm;
-    }
-
-    body {
-      margin: 0;
-      padding: 0;
-    }
-
-    @page {
-      size: A4;
-      margin: 20mm;
-    }
+  .page {
+    width: 794px;
+    height: 1123px;
+    padding: 2rem;
+    margin: 1rem auto;
+    background: white;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
   }
 }

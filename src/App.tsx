@@ -11,19 +11,15 @@ import { UserProfile } from './components/UserProfile';
 
 const AppContent: React.FC = () => {
   const [token, setToken] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const savedToken = localStorage.getItem('accessToken');
     if (savedToken) {
       setToken(savedToken);
-
       startConnection()
         .then(() => {
-          console.log('SignalR started successfully');
 
-          // Подписка на серверные события
           hubConnection.on('DocumentCreated', (document) => {
             console.log('DocumentCreated received:', document);
           });
@@ -42,7 +38,6 @@ const AppContent: React.FC = () => {
         })
         .catch((err) => {
           console.error('SignalR Start Error:', err);
-          setError('Failed to connect to real-time updates. Check your network or token.');
         });
     } else {
       stopConnection().catch((err) => console.error('SignalR Stop Error:', err));
@@ -55,7 +50,6 @@ const AppContent: React.FC = () => {
 
   const handleLogin = async (loginModel: LoginModel) => {
     try {
-      setError(null);
       const response = await authApi.login(loginModel);
       const { accessToken, refreshToken } = response;
       localStorage.setItem('accessToken', accessToken);
@@ -64,14 +58,13 @@ const AppContent: React.FC = () => {
       await new Promise((r) => setTimeout(r, 1000));
       await startConnection();
       navigate('/documents');
-    } catch (error: any) {
-      setError(error.message || 'Login failed');
+    } catch (error) {
+      throw error;
     }
   };
 
   const handleRegister = async (registerModel: RegisterModel) => {
     try {
-      setError(null);
       const response = await authApi.register(registerModel);
       const { accessToken, refreshToken } = response;
       localStorage.setItem('accessToken', accessToken);
@@ -80,24 +73,18 @@ const AppContent: React.FC = () => {
       await new Promise((r) => setTimeout(r, 1000));
       await startConnection();
       navigate('/documents');
-    } catch (error: any) {
-      setError(error.message || 'Registration failed');
+    } catch (error) {
+      throw error;
     }
   };
 
   const handleLogout = async () => {
-    try {
-      await authApi.logout();
-    } catch (err) {
-      console.error('Logout error:', err);
-    } finally {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      setToken(null);
-      await stopConnection();
-      navigate('/login');
-    }
-  };
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    setToken(null);
+    await stopConnection();
+    navigate('/login');
+};
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -108,7 +95,6 @@ const AppContent: React.FC = () => {
             <div className="flex items-center justify-center h-screen">
               <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
                 <h1 className="text-2xl font-bold mb-6 text-center">CollaboCraft</h1>
-                {error && <p className="text-red-500 mb-4">{error}</p>}
                 <Login onLogin={handleLogin} />
               </div>
             </div>
@@ -122,7 +108,6 @@ const AppContent: React.FC = () => {
             <div className="flex items-center justify-center h-screen">
               <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
                 <h1 className="text-2xl font-bold mb-6 text-center">CollaboCraft</h1>
-                {error && <p className="text-red-500 mb-4">{error}</p>}
                 <Register onRegister={handleRegister} />
               </div>
             </div>
