@@ -1,85 +1,113 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { EditorContent, useEditor, Editor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Image from '@tiptap/extension-image';
+import TextStyle from '@tiptap/extension-text-style';
+import TextAlign from '@tiptap/extension-text-align';
+import BulletList from '@tiptap/extension-bullet-list';
+import OrderedList from '@tiptap/extension-ordered-list';
+import ListItem from '@tiptap/extension-list-item';
+import Heading from '@tiptap/extension-heading';
 
 interface Props {
-  text: string;
+  content: any;
   editable: boolean;
-  onChange: (text: string) => void;
   onFocus?: () => void;
-  onImagePaste?: (file: File, insertAtCursor: (marker: string) => void) => void;
+  onEditorReady?: (editor: Editor) => void;
+  onChange: (json: any) => void;
+  onImagePaste?: (file: File, insertAtCursor: (url: string) => void) => void;
 }
 
-export const RichTextBlockEditor: React.FC<Props> = ({ text, editable, onChange, onFocus, onImagePaste }) => {
-  const divRef = useRef<HTMLDivElement>(null);
+export const RichTextBlockEditor: React.FC<Props> = ({
+  content,
+  editable,
+  onFocus,
+  onChange,
+  onImagePaste,
+  onEditorReady,
+}) => {
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        history: false,
+        bulletList: false,
+        orderedList: false,
+        heading: false,
+      }),
+      TextStyle,
+      TextAlign.configure({ types: ['heading', 'paragraph', 'listItem'] }), // Добавляем listItem
+      Image,
+      BulletList.configure({
+        HTMLAttributes: { class: 'list-disc pl-6' },
+      }),
+      OrderedList.configure({
+        HTMLAttributes: { class: 'list-decimal pl-6' },
+      }),
+      ListItem,
+      Heading.configure({
+        levels: [1, 2, 3, 4, 5, 6],
+        HTMLAttributes: { class: 'font-bold' },
+      }),
+    ],
+    editable,
+    content,
+    onUpdate: ({ editor }) => {
+      console.log('Editor updated:', editor.getJSON()); // Отладка
+      onChange(editor.getJSON());
+    },
+    onFocus: () => {
+      console.log('Editor focused'); // Отладка
+      onFocus?.();
+    },
+    onCreate: () => console.log('Editor created'), // Отладка
+  });
 
   useEffect(() => {
-    const el = divRef.current;
-    if (!el || el.innerText === text) return;
-
-    const sel = window.getSelection();
-    const range = sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
-    const offset = range ? range.startOffset : 0;
-
-    el.innerText = text;
-
-    if (editable && sel && el.firstChild) {
-      const newRange = document.createRange();
-      const pos = Math.min(offset, el.innerText.length);
-      newRange.setStart(el.firstChild, pos);
-      newRange.collapse(true);
-      sel.removeAllRanges();
-      sel.addRange(newRange);
+    if (editor && onEditorReady) {
+      console.log('Editor initialized:', editor); // Отладка
+      onEditorReady(editor);
+    } else if (!editor) {
+      console.log('Editor failed to initialize'); // Отладка
     }
-  }, [text, editable]);
+  }, [editor, onEditorReady]);
 
-  const handleInput = () => {
-    onChange(divRef.current?.innerText || '');
-  };
+  useEffect(() => {
+    if (!editor || !onImagePaste) return;
 
-  const insertAtCursor = (marker: string) => {
-    const el = divRef.current;
-    if (!el) return;
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
 
-    const sel = window.getSelection();
-    if (!sel || !sel.rangeCount) return;
-
-    const range = sel.getRangeAt(0);
-    range.deleteContents();
-    range.insertNode(document.createTextNode(marker));
-    handleInput(); // синхронизируем
-  };
-
-  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
-  if (!onImagePaste) return;
-
-  const items = e.clipboardData.items;
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    if (item.type.startsWith('image/')) {
-      const file = item.getAsFile();
-      if (file) {
-        e.preventDefault();
-        onImagePaste(file, insertAtCursor);
-        break; 
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            onImagePaste(file, (url: string) => {
+              editor.chain().focus().setImage({ src: url }).run();
+            });
+          }
+        }
       }
-    }
-  }
-};
+    };
+
+    const dom = editor.view.dom;
+    dom.addEventListener('paste', handlePaste);
+    return () => dom.removeEventListener('paste', handlePaste);
+  }, [editor, onImagePaste]);
+
+  if (!editor) return <div className="text-red-500">Редактор не инициализирован</div>;
 
   return (
-    <div
-      ref={divRef}
-      contentEditable={editable}
-      suppressContentEditableWarning
-      onInput={handleInput}
-      onFocus={onFocus}
-      onPaste={handlePaste}
-      className="min-h-[24px] w-full p-1 transition-all
-                 outline-none whitespace-pre-wrap break-words
-                 focus:ring-2 focus:ring-blue-400
-                 hover:bg-gray-50 focus:bg-white
-                 rounded-sm"
-      style={{ fontSize: 16, lineHeight: '24px' }}
-      spellCheck={false}
-    />
+    <div>
+      <EditorContent
+        editor={editor}
+        className="min-h-[100px] w-full p-2 border border-gray-300 rounded-sm bg-white
+                   outline-none whitespace-pre-wrap break-words
+                   focus:ring-2 focus:ring-blue-400
+                   hover:bg-gray-50 transition-all"
+        spellCheck={false}
+      />
+    </div>
   );
 };
