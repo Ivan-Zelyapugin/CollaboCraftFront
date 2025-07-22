@@ -10,7 +10,11 @@ import ListItem from '@tiptap/extension-list-item';
 import Heading from '@tiptap/extension-heading';
 import { FontSize } from '../extensions/FontSize'; // убедись, что путь верный
 import { FontFamily } from '../extensions/FontFamily';
-
+import Underline from '@tiptap/extension-underline'
+import Subscript from '@tiptap/extension-subscript'
+import Superscript from '@tiptap/extension-superscript'
+import Color from '@tiptap/extension-color'
+import Highlight from '@tiptap/extension-highlight'
 interface Props {
   content: any;
   editable: boolean;
@@ -39,11 +43,19 @@ export const RichTextBlockEditor: React.FC<Props> = ({
       TextStyle, // обязательно
       FontFamily,  // обязательно
       FontSize,
+      Color,
+      Highlight.configure({
+      multicolor: true,  // включаем поддержку разных цветов подсветки
+      // можно не задавать цвет по умолчанию, чтобы убрать желтый фон
+    }),
       TextAlign.configure({ types: ['heading', 'paragraph', 'listItem'] }),
       Image,
       BulletList.configure({ HTMLAttributes: { class: 'list-disc pl-6' } }),
       OrderedList.configure({ HTMLAttributes: { class: 'list-decimal pl-6' } }),
       ListItem,
+      Underline,
+    Subscript,
+    Superscript,
       Heading.configure({ levels: [1, 2, 3, 4, 5, 6] }),
     ],
     editable,
