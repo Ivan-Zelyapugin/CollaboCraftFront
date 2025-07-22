@@ -11,6 +11,22 @@ interface EditorToolbarProps {
   currentAttributes: any; // Новое свойство для текущих атрибутов
 }
 
+const FONT_SIZES = [8,10,12,14,16,18,20,24,28,32,36,40,44,48,52,56,60,64];
+
+function increaseFontSize(currentSize: number): number {
+  for (let size of FONT_SIZES) {
+    if (size > currentSize) return size;
+  }
+  return FONT_SIZES[FONT_SIZES.length - 1];
+}
+
+function decreaseFontSize(currentSize: number): number {
+  for (let i = FONT_SIZES.length - 1; i >= 0; i--) {
+    if (FONT_SIZES[i] < currentSize) return FONT_SIZES[i];
+  }
+  return FONT_SIZES[0];
+}
+
 const fontOptions = [
   'Arial', 'Arial Black', 'Brush Script MT', 'Calibri', 'Cambria', 'Candara', 'Comic Sans MS', 'Consolas',
   'Constantia', 'Corbel', 'Courier New', 'Franklin Gothic Medium', 'Garamond', 'Georgia', 'Gill Sans',
@@ -257,30 +273,30 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, onAddBlock
                   </select>
 
                   <button
-                    type="button"
-                    className="p-2 border rounded hover:bg-gray-200 flex items-center justify-center"
-                    onClick={() => {
-                      const currentSize = (editor.getAttributes('textStyle') as any).fontSize || 14;
-                      const newSize = Math.min(currentSize + 1, 64);
-                      editor.chain().focus().setFontSize(newSize).run();
-                    }}
-                    title="Увеличить размер шрифта"
-                  >
-                    <FaPlus />
-                  </button>
+  type="button"
+  className="p-2 border rounded hover:bg-gray-200 flex items-center justify-center"
+  onClick={() => {
+    const currentSize = (editor.getAttributes('textStyle') as any).fontSize || 14;
+    const newSize = increaseFontSize(currentSize);
+    editor.chain().focus().setFontSize(newSize).run();
+  }}
+  title="Увеличить размер шрифта"
+>
+  <FaPlus />
+</button>
 
                   <button
-                    type="button"
-                    className="p-2 border rounded hover:bg-gray-200 flex items-center justify-center"
-                    onClick={() => {
-                      const currentSize = (editor.getAttributes('textStyle') as any).fontSize || 14;
-                      const newSize = Math.max(currentSize - 1, 8);
-                      editor.chain().focus().setFontSize(newSize).run();
-                    }}
-                    title="Уменьшить размер шрифта"
-                  >
-                    <FaMinus />
-                  </button>
+  type="button"
+  className="p-2 border rounded hover:bg-gray-200 flex items-center justify-center"
+  onClick={() => {
+    const currentSize = (editor.getAttributes('textStyle') as any).fontSize || 14;
+    const newSize = decreaseFontSize(currentSize);
+    editor.chain().focus().setFontSize(newSize).run();
+  }}
+  title="Уменьшить размер шрифта"
+>
+  <FaMinus />
+</button>
                 </div>
               </div>
 
