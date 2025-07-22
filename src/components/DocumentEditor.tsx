@@ -16,6 +16,7 @@ export const DocumentEditor: React.FC = () => {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [role, setRole] = useState<DocumentRole | null>(null);
   const [activeEditor, setActiveEditor] = useState<Editor | null>(null);
+  const [currentAttributes, setCurrentAttributes] = useState<any>({}); // Новое состояние
   const activeBlockIdRef = useRef<number | null>(null);
   const canEdit = role === 'Creator' || role === 'Editor';
   const editorRefs = useRef<Record<number, Editor>>({});
@@ -128,7 +129,11 @@ export const DocumentEditor: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100 w-full">
       {canEdit && activeEditor && (
-        <EditorToolbar editor={activeEditor} onAddBlock={handleAddBlock} />
+        <EditorToolbar
+          editor={activeEditor}
+          onAddBlock={handleAddBlock}
+          currentAttributes={currentAttributes} // Передаем текущие атрибуты
+        />
       )}
       <div className="flex w-full">
         <main className="mx-auto w-[794px] p-8 flex flex-col space-y-1 bg-white">
@@ -179,6 +184,7 @@ export const DocumentEditor: React.FC = () => {
                   onImagePaste={(file, insertAtCursor) =>
                     handleImagePaste(block.id, file, insertAtCursor)
                   }
+                  onSelectionUpdate={setCurrentAttributes} // Передаем обработчик
                 />
               </div>
             );

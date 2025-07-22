@@ -22,6 +22,7 @@ interface Props {
   onEditorReady?: (editor: Editor) => void;
   onChange: (json: any) => void;
   onImagePaste?: (file: File, insertAtCursor: (url: string) => void) => void;
+  onSelectionUpdate?: (attributes: any) => void; // Новый пропс
 }
 
 export const RichTextBlockEditor: React.FC<Props> = ({
@@ -31,6 +32,7 @@ export const RichTextBlockEditor: React.FC<Props> = ({
   onChange,
   onImagePaste,
   onEditorReady,
+  onSelectionUpdate,
 }) => {
   const editor = useEditor({
     extensions: [
@@ -40,22 +42,19 @@ export const RichTextBlockEditor: React.FC<Props> = ({
         orderedList: false,
         heading: false,
       }),
-      TextStyle, // обязательно
-      FontFamily,  // обязательно
+      TextStyle,
+      FontFamily,
       FontSize,
       Color,
-      Highlight.configure({
-      multicolor: true,  // включаем поддержку разных цветов подсветки
-      // можно не задавать цвет по умолчанию, чтобы убрать желтый фон
-    }),
+      Highlight.configure({ multicolor: true }),
       TextAlign.configure({ types: ['heading', 'paragraph', 'listItem'] }),
       Image,
       BulletList.configure({ HTMLAttributes: { class: 'list-disc pl-6' } }),
       OrderedList.configure({ HTMLAttributes: { class: 'list-decimal pl-6' } }),
       ListItem,
       Underline,
-    Subscript,
-    Superscript,
+      Subscript,
+      Superscript,
       Heading.configure({ levels: [1, 2, 3, 4, 5, 6] }),
     ],
     editable,
@@ -63,6 +62,23 @@ export const RichTextBlockEditor: React.FC<Props> = ({
     onUpdate: ({ editor }) => onChange(editor.getJSON()),
     onFocus: () => onFocus?.(),
     onCreate: () => console.log('Editor created'),
+    onSelectionUpdate: ({ editor }) => {
+      // Получаем текущие атрибуты в позиции курсора
+      const attributes = {
+        fontFamily: editor.getAttributes('textStyle').fontFamily || 'Times New Roman',
+        fontSize: editor.getAttributes('textStyle').fontSize || 14,
+        color: editor.getAttributes('textStyle').color || '#000000',
+        highlight: editor.getAttributes('highlight').color || null,
+        bold: editor.isActive('bold'),
+        italic: editor.isActive('italic'),
+        underline: editor.isActive('underline'),
+        strike: editor.isActive('strike'),
+        superscript: editor.isActive('superscript'),
+        subscript: editor.isActive('subscript'),
+        textAlign: editor.getAttributes('paragraph').textAlign || 'left',
+      };
+      onSelectionUpdate?.(attributes);
+    },
   });
 
   useEffect(() => {

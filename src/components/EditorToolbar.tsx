@@ -8,6 +8,7 @@ import {
 interface EditorToolbarProps {
   editor: Editor;
   onAddBlock: () => void;
+  currentAttributes: any; // Новое свойство для текущих атрибутов
 }
 
 const fontOptions = [
@@ -54,7 +55,7 @@ export const ColorPickerDropdown: React.FC<Props> = ({ onSelect }) => {
   );
 };
 
-export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, onAddBlock }) => {
+export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, onAddBlock, currentAttributes }) => {
   const [activeTab, setActiveTab] = useState<'file' | 'home' | 'insert' | 'layout'>('home');
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [fontDropdownOpen, setFontDropdownOpen] = useState(false);
@@ -67,17 +68,26 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, onAddBlock
   const textColorRef = useRef<HTMLDivElement>(null);
   const highlightColorRef = useRef<HTMLDivElement>(null);
 
-  const highlightAttr = editor.getAttributes('highlight');
-  const bgColor = highlightAttr.color || '#fff';
-
-  const currentFont = (editor.getAttributes('textStyle') as any).fontFamily || 'Times New Roman';
+  // Используем currentAttributes вместо прямых вызовов getAttributes
+  const bgColor = currentAttributes.highlight || '#fff';
+  const currentFont = currentAttributes.fontFamily || 'Times New Roman';
+  const currentFontSize = currentAttributes.fontSize || 14;
+  const isBold = currentAttributes.bold || false;
+  const isItalic = currentAttributes.italic || false;
+  const isUnderline = currentAttributes.underline || false;
+  const isStrike = currentAttributes.strike || false;
+  const isSuperscript = currentAttributes.superscript || false;
+  const isSubscript = currentAttributes.subscript || false;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
-        dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
-        textColorRef.current && !textColorRef.current.contains(event.target as Node) &&
-        highlightColorRef.current && !highlightColorRef.current.contains(event.target as Node)
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        textColorRef.current &&
+        !textColorRef.current.contains(event.target as Node) &&
+        highlightColorRef.current &&
+        !highlightColorRef.current.contains(event.target as Node)
       ) {
         setFontDropdownOpen(false);
         setSearchTerm('');
