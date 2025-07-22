@@ -21,7 +21,7 @@ export const DocumentEditor: React.FC = () => {
   const editorRefs = useRef<Record<number, Editor>>({});
 
   const save = useDebouncedCallback((id: number, json: any) => {
-    console.log('Saving block:', id, json); // Отладка
+    console.log('Saving block:', id, json);
     sendMessage('EditBlock', [
       {
         id,
@@ -37,8 +37,8 @@ export const DocumentEditor: React.FC = () => {
       try {
         const fetched = await getBlocksByDocument(Number(documentId), new Date(0).toISOString());
         const docs = await getMyDocuments();
-        console.log('Fetched blocks:', fetched); // Отладка
-        console.log('Fetched docs:', docs); // Отладка
+        console.log('Fetched blocks:', fetched);
+        console.log('Fetched docs:', docs);
         setBlocks(fetched);
         setRole(docs.find(d => d.document.id === Number(documentId))?.role ?? null);
       } catch (error) {
@@ -47,12 +47,12 @@ export const DocumentEditor: React.FC = () => {
     })();
 
     hubConnection.on('ReceiveBlock', (newBlock: Block) => {
-      console.log('Received new block:', newBlock); // Отладка
+      console.log('Received new block:', newBlock);
       setBlocks(prev => [...prev, newBlock]);
     });
 
     hubConnection.on('BlockEdited', (b: Block) => {
-      console.log('Block edited:', b); // Отладка
+      console.log('Block edited:', b);
       setBlocks(prev => prev.map(p => (p.id === b.id ? b : p)));
     });
 
@@ -66,7 +66,7 @@ export const DocumentEditor: React.FC = () => {
     if (canEdit && blocks.length > 0 && !activeEditor && Object.keys(editorRefs.current).length > 0) {
       const firstBlockId = blocks[0].id;
       if (editorRefs.current[firstBlockId]) {
-        console.log('Setting active editor for first block:', firstBlockId); // Отладка
+        console.log('Setting active editor for first block:', firstBlockId);
         setActiveEditor(editorRefs.current[firstBlockId]);
         activeBlockIdRef.current = firstBlockId;
       }
@@ -121,68 +121,70 @@ export const DocumentEditor: React.FC = () => {
 
   const handleAddBlock = () => {
     if (!documentId) return;
-    console.log('Adding new block for document:', documentId); // Отладка
+    console.log('Adding new block for document:', documentId);
     sendMessage('SendBlock', [{ text: '{}', documentId: Number(documentId) }]);
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100 relative">
-      <main className="mx-auto w-[794px] p-8 flex flex-col space-y-1 bg-white">
-        {canEdit && activeEditor && (
-          <EditorToolbar editor={activeEditor} onAddBlock={handleAddBlock} />
-        )}
-        {blocks.length === 0 && canEdit && (
-          <div className="text-center text-gray-500 py-4">Нет блоков для редактирования</div>
-        )}
-        {blocks.map(block => {
-          let content: any = {
-            type: 'doc',
-            content: [
-              {
-                type: 'paragraph',
-                content: [],
-              },
-            ],
-          };
+    <div className="min-h-screen bg-gray-100 w-full">
+      {canEdit && activeEditor && (
+        <EditorToolbar editor={activeEditor} onAddBlock={handleAddBlock} />
+      )}
+      <div className="flex w-full">
+        <main className="mx-auto w-[794px] p-8 flex flex-col space-y-1 bg-white">
+          {blocks.length === 0 && canEdit && (
+            <div className="text-center text-gray-500 py-4">Нет блоков для редактирования</div>
+          )}
+          {blocks.map(block => {
+            let content: any = {
+              type: 'doc',
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [],
+                },
+              ],
+            };
 
-          try {
-            const parsed = JSON.parse(block.text || '{}');
-            if (parsed?.type === 'doc') {
-              content = parsed;
+            try {
+              const parsed = JSON.parse(block.text || '{}');
+              if (parsed?.type === 'doc') {
+                content = parsed;
+              }
+            } catch (e) {
+              console.warn('Невалидный JSON в блоке', block.id, e);
             }
-          } catch (e) {
-            console.warn('Невалидный JSON в блоке', block.id, e);
-          }
 
-          return (
-            <div key={block.id} className="border p-2 rounded-sm">
-              <RichTextBlockEditor
-                content={content}
-                editable={canEdit}
-                onFocus={() => {
-                  console.log('Block focused:', block.id); // Отладка
-                  activeBlockIdRef.current = block.id;
-                  if (editorRefs.current[block.id]) {
-                    setActiveEditor(editorRefs.current[block.id]);
-                  }
-                }}
-                onEditorReady={(editor) => {
-                  console.log('Editor ready for block:', block.id); // Отладка
-                  editorRefs.current[block.id] = editor;
-                  if (!activeEditor && blocks[0]?.id === block.id && canEdit) {
-                    setActiveEditor(editor);
+            return (
+              <div key={block.id} className="border p-2 rounded-sm">
+                <RichTextBlockEditor
+                  content={content}
+                  editable={canEdit}
+                  onFocus={() => {
+                    console.log('Block focused:', block.id);
                     activeBlockIdRef.current = block.id;
+                    if (editorRefs.current[block.id]) {
+                      setActiveEditor(editorRefs.current[block.id]);
+                    }
+                  }}
+                  onEditorReady={(editor) => {
+                    console.log('Editor ready for block:', block.id);
+                    editorRefs.current[block.id] = editor;
+                    if (!activeEditor && blocks[0]?.id === block.id && canEdit) {
+                      setActiveEditor(editor);
+                      activeBlockIdRef.current = block.id;
+                    }
+                  }}
+                  onChange={json => handleBlockChange(block.id, json)}
+                  onImagePaste={(file, insertAtCursor) =>
+                    handleImagePaste(block.id, file, insertAtCursor)
                   }
-                }}
-                onChange={json => handleBlockChange(block.id, json)}
-                onImagePaste={(file, insertAtCursor) =>
-                  handleImagePaste(block.id, file, insertAtCursor)
-                }
-              />
-            </div>
-          );
-        })}
-      </main>
+                />
+              </div>
+            );
+          })}
+        </main>
+      </div>
     </div>
   );
 };

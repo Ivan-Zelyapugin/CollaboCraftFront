@@ -14,3 +14,46 @@
     flex-direction: column;
   }
 }
+
+/* Стили для заголовков */
+.prose h1 {
+  font-size: 2.25rem; /* 36px */
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+
+.prose h2 {
+  font-size: 1.875rem; /* 30px */
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 0.75rem;
+}
+
+.prose h3 {
+  font-size: 1.5rem; /* 24px */
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+}
+
+.prose h4 {
+  font-size: 1.25rem; /* 20px */
+  font-weight: 600;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+.prose h5 {
+  font-size: 1.125rem; /* 18px */
+  font-weight: 500;
+  line-height: 1.6;
+  margin-bottom: 0.25rem;
+}
+
+.prose h6 {
+  font-size: 1rem; /* 16px */
+  font-weight: 500;
+  line-height: 1.6;
+  margin-bottom: 0.25rem;
+}

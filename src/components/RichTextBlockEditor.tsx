@@ -8,6 +8,8 @@ import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
 import Heading from '@tiptap/extension-heading';
+import { FontSize } from '../extensions/FontSize'; // убедись, что путь верный
+import { FontFamily } from '../extensions/FontFamily';
 
 interface Props {
   content: any;
@@ -34,41 +36,25 @@ export const RichTextBlockEditor: React.FC<Props> = ({
         orderedList: false,
         heading: false,
       }),
-      TextStyle,
-      TextAlign.configure({ types: ['heading', 'paragraph', 'listItem'] }), // Добавляем listItem
+      TextStyle, // обязательно
+      FontFamily,  // обязательно
+      FontSize,
+      TextAlign.configure({ types: ['heading', 'paragraph', 'listItem'] }),
       Image,
-      BulletList.configure({
-        HTMLAttributes: { class: 'list-disc pl-6' },
-      }),
-      OrderedList.configure({
-        HTMLAttributes: { class: 'list-decimal pl-6' },
-      }),
+      BulletList.configure({ HTMLAttributes: { class: 'list-disc pl-6' } }),
+      OrderedList.configure({ HTMLAttributes: { class: 'list-decimal pl-6' } }),
       ListItem,
-      Heading.configure({
-        levels: [1, 2, 3, 4, 5, 6],
-        HTMLAttributes: { class: 'font-bold' },
-      }),
+      Heading.configure({ levels: [1, 2, 3, 4, 5, 6] }),
     ],
     editable,
     content,
-    onUpdate: ({ editor }) => {
-      console.log('Editor updated:', editor.getJSON()); // Отладка
-      onChange(editor.getJSON());
-    },
-    onFocus: () => {
-      console.log('Editor focused'); // Отладка
-      onFocus?.();
-    },
-    onCreate: () => console.log('Editor created'), // Отладка
+    onUpdate: ({ editor }) => onChange(editor.getJSON()),
+    onFocus: () => onFocus?.(),
+    onCreate: () => console.log('Editor created'),
   });
 
   useEffect(() => {
-    if (editor && onEditorReady) {
-      console.log('Editor initialized:', editor); // Отладка
-      onEditorReady(editor);
-    } else if (!editor) {
-      console.log('Editor failed to initialize'); // Отладка
-    }
+    if (editor && onEditorReady) onEditorReady(editor);
   }, [editor, onEditorReady]);
 
   useEffect(() => {
@@ -99,15 +85,8 @@ export const RichTextBlockEditor: React.FC<Props> = ({
   if (!editor) return <div className="text-red-500">Редактор не инициализирован</div>;
 
   return (
-    <div>
-      <EditorContent
-        editor={editor}
-        className="min-h-[100px] w-full p-2 border border-gray-300 rounded-sm bg-white
-                   outline-none whitespace-pre-wrap break-words
-                   focus:ring-2 focus:ring-blue-400
-                   hover:bg-gray-50 transition-all"
-        spellCheck={false}
-      />
+    <div className="prose min-h-[100px] w-full p-2 border border-gray-300 rounded-sm bg-white outline-none whitespace-pre-wrap break-words focus:ring-2 focus:ring-blue-400 hover:bg-gray-50 transition-all">
+      <EditorContent editor={editor} spellCheck={false} />
     </div>
   );
 };

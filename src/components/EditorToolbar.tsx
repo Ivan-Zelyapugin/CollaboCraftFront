@@ -1,145 +1,268 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Editor } from '@tiptap/react';
-import { Level } from '@tiptap/extension-heading';
+import { 
+  FaPlus, FaTrash, FaBold, FaItalic, FaStrikethrough, FaUnderline, 
+  FaSuperscript, FaSubscript, FaFont, FaFillDrip, 
+  FaAlignLeft, FaAlignCenter, FaAlignRight, FaAlignJustify 
+} from 'react-icons/fa';
 
 interface EditorToolbarProps {
   editor: Editor;
   onAddBlock: () => void;
 }
 
+const fontOptions = [
+  'Arial', 'Arial Black', 'Brush Script MT', 'Calibri', 'Cambria', 'Candara', 'Comic Sans MS', 'Consolas',
+  'Constantia', 'Corbel', 'Courier New', 'Franklin Gothic Medium', 'Garamond', 'Georgia', 'Gill Sans',
+  'Helvetica', 'Impact', 'Lucida Console', 'Lucida Sans Unicode', 'Optima', 'Palatino Linotype', 'Segoe Print',
+  'Segoe Script', 'Segoe UI', 'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana',
+];
+
+// Отсортируем один раз по алфавиту
+const sortedFonts = [...fontOptions].sort((a, b) => a.localeCompare(b));
+
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, onAddBlock }) => {
+  const [activeTab, setActiveTab] = useState<'file' | 'home' | 'insert' | 'layout'>('home');
+  const [showFileMenu, setShowFileMenu] = useState(false);
+
+  // Для дропдауна с шрифтами
+  const [fontDropdownOpen, setFontDropdownOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [recentFonts, setRecentFonts] = useState<string[]>([]);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Текущий выбранный шрифт в редакторе
+  const currentFont = (editor.getAttributes('textStyle') as any).fontFamily || 'Times New Roman';
+
+  // Закрытие дропдауна при клике вне
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setFontDropdownOpen(false);
+        setSearchTerm('');
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // При выборе шрифта
+  const onSelectFont = (font: string) => {
+    editor.chain().focus().setFontFamily(font).run();
+    setFontDropdownOpen(false);
+    setSearchTerm('');
+
+    // Добавляем в недавно использованные (без повторов, максимум 5)
+    setRecentFonts(prev => {
+      const newList = [font, ...prev.filter(f => f !== font)];
+      return newList.slice(0, 5);
+    });
+  };
+
+  // Фильтрация по поиску (case insensitive)
+  const filteredFonts = sortedFonts.filter(f => f.toLowerCase().includes(searchTerm.toLowerCase()));
+
   if (!editor) return null;
 
   return (
-    <div className="sticky top-0 z-50 bg-white shadow-md border-b p-2">
-      <div className="max-w-[794px] mx-auto flex items-center gap-2 flex-wrap">
-        {/* Кнопка добавления блока */}
-        <button
-          onClick={() => {
-            console.log('Add block clicked'); // Отладка
-            onAddBlock();
-          }}
-          className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
-        >
-          ➕ Блок
-        </button>
+    <div className="sticky top-0 z-50 bg-white shadow-md border-b px-4 py-2 w-full">
+      <div className="flex border-b mb-2">
+        {(['file', 'home', 'insert', 'layout'] as const).map(tab => (
+          <button
+            key={tab}
+            className={`px-4 py-2 font-medium ${activeTab === tab ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600 hover:text-blue-500'}`}
+            onClick={() => {
+              setActiveTab(tab);
+              setShowFileMenu(false);
+            }}
+          >
+            {tab === 'file' ? 'Файл' : tab === 'home' ? 'Главная' : tab === 'insert' ? 'Вставка' : 'Макет'}
+          </button>
+        ))}
+      </div>
 
-        {/* Заголовки */}
-        <select
-          className="border px-2 py-1 rounded bg-gray-50 hover:bg-gray-100 transition-colors"
-          value={
-            editor.isActive('heading', { level: 1 }) ? 'h1' :
-            editor.isActive('heading', { level: 2 }) ? 'h2' :
-            editor.isActive('heading', { level: 3 }) ? 'h3' :
-            editor.isActive('heading', { level: 4 }) ? 'h4' :
-            editor.isActive('heading', { level: 5 }) ? 'h5' :
-            editor.isActive('heading', { level: 6 }) ? 'h6' :
-            'paragraph'
-          }
-          onChange={(e) => {
-            const value = e.target.value;
-            console.log('Heading selected:', value); // Отладка
-            const chain = editor.chain().focus();
-            if (value === 'paragraph') {
-              chain.setNode('paragraph').run();
-            } else {
-              const level = parseInt(value[1], 10) as Level;
-              chain.toggleHeading({ level }).run();
-            }
-          }}
-        >
-          <option value="paragraph">Параграф</option>
-          <option value="h1">Заголовок 1</option>
-          <option value="h2">Заголовок 2</option>
-          <option value="h3">Заголовок 3</option>
-          <option value="h4">Заголовок 4</option>
-          <option value="h5">Заголовок 5</option>
-          <option value="h6">Заголовок 6</option>
-        </select>
+      <div className="flex flex-wrap gap-4 relative">
+        {activeTab === 'file' && (
+          <div>
+            <button
+              className="bg-gray-100 px-4 py-2 rounded shadow hover:bg-gray-200"
+              onClick={() => setShowFileMenu(prev => !prev)}
+            >
+              📁 Меню файла
+            </button>
+            {showFileMenu && (
+              <div className="absolute mt-2 bg-white border rounded shadow z-50 w-48">
+                <button
+                  onClick={() => {
+                    console.log('Export document');
+                    setShowFileMenu(false);
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
+                  📤 Экспортировать
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* Bold */}
-        <button
-          onClick={() => {
-            console.log('Toggle bold'); // Отладка
-            editor.chain().focus().toggleBold().run();
-          }}
-          className={`px-3 py-1 rounded border ${editor.isActive('bold') ? 'bg-blue-100' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}
-        >
-          <b>B</b>
-        </button>
+        {activeTab === 'home' && (
+          <>
+            {/* Блоки */}
+            <div className="flex flex-col border-r pr-4">
+              <span className="text-sm font-semibold text-gray-500 mb-1">Блоки</span>
+              <button
+                onClick={onAddBlock}
+                className="bg-blue-600 text-white px-3 py-1 mb-2 rounded hover:bg-blue-700 flex items-center gap-2"
+              >
+                <FaPlus /> Добавить
+              </button>
+              <button
+                disabled
+                className="bg-gray-300 text-white px-3 py-1 rounded cursor-not-allowed flex items-center gap-2"
+              >
+                <FaTrash /> Удалить
+              </button>
+            </div>
 
-        {/* Italic */}
-        <button
-          onClick={() => {
-            console.log('Toggle italic'); // Отладка
-            editor.chain().focus().toggleItalic().run();
-          }}
-          className={`px-3 py-1 rounded border ${editor.isActive('italic') ? 'bg-blue-100' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}
-        >
-          <i>I</i>
-        </button>
+            {/* Шрифт */}
+            <div className="flex flex-col border-r pr-4 min-w-[280px]" ref={dropdownRef}>
+              <span className="text-sm font-semibold text-gray-500 mb-1">Шрифт</span>
 
-        {/* Strike */}
-        <button
-          onClick={() => {
-            console.log('Toggle strike'); // Отладка
-            editor.chain().focus().toggleStrike().run();
-          }}
-          className={`px-3 py-1 rounded border ${editor.isActive('strike') ? 'bg-blue-100' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}
-        >
-          <s>S</s>
-        </button>
+              {/* Кастомный дропдаун */}
+              <div className="relative">
+                <button
+                  className="w-full border px-3 py-1 rounded bg-white text-left cursor-pointer"
+                  onClick={() => setFontDropdownOpen(open => !open)}
+                  style={{ fontFamily: currentFont }}
+                >
+                  {currentFont}
+                </button>
 
-        {/* Маркированный список */}
-        <button
-          onClick={() => {
-            console.log('Toggle bullet list'); // Отладка
-            editor.chain().focus().toggleBulletList().run();
-          }}
-          className={`px-3 py-1 rounded border ${editor.isActive('bulletList') ? 'bg-blue-100' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}
-        >
-          • Список
-        </button>
+                {fontDropdownOpen && (
+                  <div className="absolute z-50 bg-white border rounded shadow mt-1 max-h-60 overflow-auto w-full">
+                    {/* Поиск */}
+                    <input
+                      type="text"
+                      placeholder="Поиск шрифта..."
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                      className="w-full px-3 py-1 border-b outline-none"
+                      autoFocus
+                    />
 
-        {/* Нумерованный список */}
-        <button
-          onClick={() => {
-            console.log('Toggle ordered list'); // Отладка
-            editor.chain().focus().toggleOrderedList().run();
-          }}
-          className={`px-3 py-1 rounded border ${editor.isActive('orderedList') ? 'bg-blue-100' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}
-        >
-          1. Список
-        </button>
+                    {/* Недавно использованные */}
+                    {recentFonts.length > 0 && (
+                      <div className="p-2 border-b">
+                        <div className="text-xs font-semibold text-gray-600 mb-1">Недавно использованные</div>
+                        {recentFonts.map(font => (
+                          <div
+                            key={font}
+                            onClick={() => onSelectFont(font)}
+                            className="cursor-pointer px-2 py-1 rounded hover:bg-blue-100"
+                            style={{ fontFamily: font }}
+                          >
+                            {font}
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
-        {/* Выравнивание */}
-        <button
-          onClick={() => {
-            console.log('Set text align left'); // Отладка
-            editor.chain().focus().setTextAlign('left').run();
-          }}
-          className={`px-3 py-1 rounded border ${editor.isActive({ textAlign: 'left' }) ? 'bg-blue-100' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}
-        >
-          ⬅️
-        </button>
-        <button
-          onClick={() => {
-            console.log('Set text align center'); // Отладка
-            editor.chain().focus().setTextAlign('center').run();
-          }}
-          className={`px-3 py-1 rounded border ${editor.isActive({ textAlign: 'center' }) ? 'bg-blue-100' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}
-        >
-          ⬅️➡️
-        </button>
-        <button
-          onClick={() => {
-            console.log('Set text align right'); // Отладка
-            editor.chain().focus().setTextAlign('right').run();
-          }}
-          className={`px-3 py-1 rounded border ${editor.isActive({ textAlign: 'right' }) ? 'bg-blue-100' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}
-        >
-          ➡️
-        </button>
+                    {/* Все шрифты */}
+                    <div className="p-2">
+                      {filteredFonts.length > 0 ? filteredFonts.map(font => (
+                        <div
+                          key={font}
+                          onClick={() => onSelectFont(font)}
+                          className="cursor-pointer px-2 py-1 rounded hover:bg-blue-100"
+                          style={{ fontFamily: font }}
+                        >
+                          {font}
+                        </div>
+                      )) : (
+                        <div className="text-gray-500 px-2 py-1">Шрифты не найдены</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Остальной код: размер шрифта, стили текста и выравнивание оставим без изменений */}
+            <div className="flex flex-col border-r pr-4 min-w-[120px]">
+              <span className="text-sm font-semibold text-gray-500 mb-1">Размер</span>
+              <select
+                className="border px-2 py-1 rounded bg-gray-50"
+                onChange={e => editor.chain().focus().setFontSize(Number(e.target.value)).run()}
+                value={(editor.getAttributes('textStyle') as any).fontSize || 14}
+              >
+                {[10, 12, 14, 16, 18, 20, 24, 28, 32].map(size => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col border-r pr-4">
+              <span className="text-sm font-semibold text-gray-500 mb-1">Стиль текста</span>
+              <div className="flex flex-wrap gap-1 items-center">
+                {[{ icon: FaBold, command: 'toggleBold', label: 'Жирный' },
+                  { icon: FaItalic, command: 'toggleItalic', label: 'Курсив' },
+                  { icon: FaStrikethrough, command: 'toggleStrike', label: 'Зачёркнутый' },
+                  { icon: FaUnderline, command: 'toggleUnderline', label: 'Подчёркнутый' },
+                  { icon: FaSuperscript, command: 'toggleSuperscript', label: 'Надстрочный' },
+                  { icon: FaSubscript, command: 'toggleSubscript', label: 'Подстрочный' }]
+                  .map(({ icon: Icon, command, label }) => (
+                    <button
+                      key={command}
+                      onClick={() => (editor.chain().focus() as any)[command]().run()}
+                      title={label}
+                      className={`p-1 ${editor.isActive(command.replace('toggle', '').toLowerCase()) ? 'bg-blue-100' : ''}`}
+                    >
+                      <Icon />
+                    </button>
+                  ))}
+
+                <label className="flex items-center gap-1" title="Цвет текста">
+                  <FaFont />
+                  <input
+                    type="color"
+                    onChange={e => (editor.chain() as any).focus().setColor(e.target.value).run()}
+                    value={editor.getAttributes('textStyle').color || '#000000'}
+                  />
+                </label>
+
+                <label className="flex items-center gap-1" title="Цвет фона">
+                  <FaFillDrip />
+                  <input
+                    type="color"
+                    onChange={e => (editor.chain() as any).focus().setHighlight({ color: e.target.value }).run()}
+                    value={editor.getAttributes('highlight')?.color || '#ffffff'}
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="flex flex-col border-r pr-4">
+              <span className="text-sm font-semibold text-gray-500 mb-1">Абзац</span>
+              <div className="flex gap-2 items-center">
+                {[{ icon: FaAlignLeft, align: 'left' },
+                  { icon: FaAlignCenter, align: 'center' },
+                  { icon: FaAlignRight, align: 'right' },
+                  { icon: FaAlignJustify, align: 'justify' }]
+                  .map(({ icon: Icon, align }) => (
+                    <button
+                      key={align}
+                      onClick={() => editor.chain().focus().setTextAlign(align).run()}
+                      title={`Выравнивание: ${align}`}
+                      className={`p-1 ${editor.isActive({ textAlign: align }) ? 'bg-blue-100' : ''}`}
+                    >
+                      <Icon />
+                    </button>
+                  ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
