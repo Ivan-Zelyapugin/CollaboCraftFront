@@ -57,3 +57,12 @@
   line-height: 1.6;
   margin-bottom: 0.25rem;
 }
+
+ol[data-level="2"] {
+  list-style-type: decimal;
+  margin-left: 20px;
+}
+ol[data-level="3"] {
+  list-style-type: decimal;
+  margin-left: 40px;
+}
