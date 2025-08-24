@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaPlus, FaTrash } from 'react-icons/fa';
-import { Editor } from '@tiptap/react';
+import { Editor } from '@tiptap/core';
 
 interface BlocksSectionProps {
   editor: Editor;

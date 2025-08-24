@@ -1,3 +1,4 @@
+// src/components/ToolBar/tsx/HomeTab/ParagraphSection.tsx
 import React, { useState, useRef } from 'react';
 import { Editor } from '@tiptap/react';
 import { FaAlignLeft, FaAlignRight, FaAlignCenter, FaAlignJustify, FaListUl, FaListOl } from 'react-icons/fa';
@@ -43,24 +44,42 @@ export const ParagraphSection: React.FC<ParagraphSectionProps> = ({
   };
 
   const setBulletList = (style: string) => {
+  if (style === 'none') {
+    if (editor.isActive('bulletList')) {
+      editor.chain().focus().toggleBulletList().run();
+    }
+    updateAttributes({ bulletList: false });
+  } else {
     editor.chain().focus().toggleBulletList().run();
     if (editor.isActive('bulletList')) {
-      editor.commands.setNode('bulletList', { listStyleType: style });
+      editor.commands.setNode('bulletList', {
+        class: `list-${style}`,
+      });
     }
-    setBulletListDropdownOpenLocal(false);
-    setBulletListDropdownOpen?.(false);
     updateAttributes({ bulletList: editor.isActive('bulletList') });
-  };
+  }
+  setBulletListDropdownOpenLocal(false);
+  setBulletListDropdownOpen?.(false);
+};
 
-  const setOrderedList = (level: number) => {
-    editor.chain().focus().toggleOrderedList().run();
-    if (editor.isActive('orderedList')) {
-      const style = level === 1 ? 'decimal' : level === 2 ? 'decimal' : 'decimal';
-      editor.commands.setNode('orderedList', { 'data-level': level, listStyleType: style });
+  const setOrderedList = (level: number, style: string) => {
+    if (style === 'none') {
+      if (editor.isActive('orderedList')) {
+        editor.chain().focus().toggleOrderedList().run();
+      }
+      updateAttributes({ orderedList: false });
+    } else {
+      editor.chain().focus().toggleOrderedList().run();
+      if (editor.isActive('orderedList')) {
+        const cssStyle = level === 1 ? 'decimal' : level === 2 ? 'lower-roman' : 'lower-alpha';
+        editor.commands.setNode('orderedList', {
+  class: `list-${style}-level-${level}`,
+});
+      }
+      updateAttributes({ orderedList: editor.isActive('orderedList') });
     }
     setOrderedListDropdownOpenLocal(false);
     setOrderedListDropdownOpen?.(false);
-    updateAttributes({ orderedList: editor.isActive('orderedList') });
   };
 
   return (
@@ -112,19 +131,24 @@ export const ParagraphSection: React.FC<ParagraphSectionProps> = ({
             <FaListUl />
           </button>
           {bulletListDropdownOpen && (
-            <div className="absolute z-50 bg-white border rounded shadow mt-1 w-40">
-              {bulletListStyles.map((style: BulletListStyle) => (
-                <button
-                  key={style.value}
-                  type="button"
-                  onClick={() => setBulletList(style.value)}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                >
-                  {style.name}
-                </button>
-              ))}
-            </div>
-          )}
+  <div className="absolute z-50 bg-white border rounded shadow mt-1 w-40">
+    {bulletListStyles.map((style: BulletListStyle) => (
+      <button
+        key={style.value}
+        type="button"
+        onClick={() => setBulletList(style.value)}
+        className={`w-full text-left px-4 py-2 hover:bg-gray-100 ${
+          editor.isActive('bulletList') && 
+          editor.getAttributes('bulletList').class?.includes(`list-${style.value}`)
+            ? 'bg-blue-100'
+            : ''
+        }`}
+      >
+        {style.name}
+      </button>
+    ))}
+  </div>
+)}
         </div>
         <div className="relative" ref={orderedListDropdownRef}>
           <button
@@ -144,7 +168,7 @@ export const ParagraphSection: React.FC<ParagraphSectionProps> = ({
                 <button
                   key={style.level}
                   type="button"
-                  onClick={() => setOrderedList(style.level)}
+                  onClick={() => setOrderedList(style.level, style.value)}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 >
                   {style.name}

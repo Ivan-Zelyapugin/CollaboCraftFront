@@ -8,7 +8,7 @@ import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
 import Heading from '@tiptap/extension-heading';
-import { FontSize } from '../extensions/FontSize'; // убедись, что путь верный
+import { FontSize } from '../extensions/FontSize'; 
 import { FontFamily } from '../extensions/FontFamily';
 import Underline from '@tiptap/extension-underline'
 import Subscript from '@tiptap/extension-subscript'

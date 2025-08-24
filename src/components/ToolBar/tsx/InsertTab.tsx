@@ -1,5 +1,5 @@
 import React from 'react';
-import { Editor } from '@tiptap/react';
+import { Editor } from '@tiptap/core';
 
 interface InsertTabProps {
   editor: Editor;

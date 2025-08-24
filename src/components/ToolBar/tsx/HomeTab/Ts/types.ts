@@ -24,6 +24,7 @@ export interface BulletListStyle {
 }
 
 export interface OrderedListStyle {
+  value: string;
   level: number;
   name: string;
 }

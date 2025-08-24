@@ -66,3 +66,30 @@ ol[data-level="3"] {
   list-style-type: decimal;
   margin-left: 40px;
 }
+
+ul.list-disc {
+  list-style-type: disc;
+}
+ul.list-square {
+  list-style-type: square;
+}
+ul.list-dash {
+  list-style-type: none;
+}
+ul.list-dash > li::before {
+  content: '–';
+  margin-right: 0.5em;
+}
+
+ol.list-decimal-level-1 {
+  list-style-type: decimal;
+  margin-left: 0;
+}
+ol.list-decimal-level-2 {
+  list-style-type: lower-roman;
+  margin-left: 20px;
+}
+ol.list-decimal-level-3 {
+  list-style-type: lower-alpha;
+  margin-left: 40px;
+}

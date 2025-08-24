@@ -1,3 +1,5 @@
+import { BulletListStyle, OrderedListStyle } from '../tsx/HomeTab/Ts/types';
+
 export const FONT_SIZES = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64];
 
 export const fontOptions = [
@@ -20,14 +22,11 @@ export const colorPalette = [
   ['#880E4F', '#E91E63', '#F06292', '#F9C1D9', '#FCE4EC'],
 ];
 
-export const bulletListStyles = [
-  { name: 'Диск', value: 'disc' },
+export const bulletListStyles: BulletListStyle[] = [
   { name: 'Круг', value: 'circle' },
-  { name: 'Квадрат', value: 'square' },
+  { name: 'Нет', value: 'none' },
 ];
 
-export const orderedListStyles = [
-  { name: '1.', value: 'decimal', level: 1 },
-  { name: '1.1', value: 'decimal', level: 2 },
-  { name: '1.1.1', value: 'decimal', level: 3 },
+export const orderedListStyles: OrderedListStyle[] = [
+  { value: 'decimal', level: 1, name: '1, 2, 3' },
 ];

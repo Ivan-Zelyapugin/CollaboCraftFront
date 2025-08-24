@@ -8,18 +8,82 @@ import { RichTextBlockEditor } from './RichTextBlockEditor';
 import { EditorToolbar } from './EditorToolbar';
 import { Block } from '../models/block';
 import { DocumentRole } from '../models/document';
-import { Editor } from '@tiptap/react';
+import { Editor, useEditor } from '@tiptap/react';
+import { FontFamily } from '../extensions/FontFamily';
+import { FontSize } from '../extensions/FontSize';
+import StarterKit from '@tiptap/starter-kit';
+import TextStyle from '@tiptap/extension-text-style';
+import Color from '@tiptap/extension-color';
+import Highlight from '@tiptap/extension-highlight';
+import TextAlign from '@tiptap/extension-text-align';
+import Image from '@tiptap/extension-image';
+import BulletList from '@tiptap/extension-bullet-list';
+import OrderedList from '@tiptap/extension-ordered-list';
+import ListItem from '@tiptap/extension-list-item';
+import Heading from '@tiptap/extension-heading';
+import Underline from '@tiptap/extension-underline';
+import Subscript from '@tiptap/extension-subscript';
+import Superscript from '@tiptap/extension-superscript';
+import { EditorAttributes } from './ToolBar/tsx/HomeTab/Ts/types';
 
 export const DocumentEditor: React.FC = () => {
   const baseUrl = 'http://localhost:9000';
   const { documentId } = useParams<{ documentId: string }>();
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [role, setRole] = useState<DocumentRole | null>(null);
+  const [currentAttributes, setCurrentAttributes] = useState<EditorAttributes>({});
   const [activeEditor, setActiveEditor] = useState<Editor | null>(null);
-  const [currentAttributes, setCurrentAttributes] = useState<any>({}); // Новое состояние
-  const activeBlockIdRef = useRef<number | null>(null);
-  const canEdit = role === 'Creator' || role === 'Editor';
   const editorRefs = useRef<Record<number, Editor>>({});
+
+  const fallbackEditor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        history: false,
+        bulletList: false,
+        orderedList: false,
+        heading: false,
+      }),
+      TextStyle,
+      FontFamily,
+      FontSize,
+      Color,
+      Highlight.configure({ multicolor: true }),
+      TextAlign.configure({ types: ['heading', 'paragraph', 'listItem'] }),
+      Image,
+      BulletList.configure({ HTMLAttributes: { class: 'list-disc pl-6' } }),
+      OrderedList.configure({ HTMLAttributes: { class: 'list-decimal pl-6' } }),
+      ListItem,
+      Underline,
+      Subscript,
+      Superscript,
+      Heading.configure({ levels: [1, 2, 3, 4, 5, 6] }),
+    ],
+    content: '<p></p>',
+    editable: role === 'Creator' || role === 'Editor',
+    onUpdate: ({ editor }) => {
+      setCurrentAttributes({
+        fontFamily: editor.getAttributes('textStyle')?.fontFamily || 'Times New Roman',
+        fontSize: editor.getAttributes('textStyle')?.fontSize || 14,
+        bold: editor.isActive('bold'),
+        italic: editor.isActive('italic'),
+        underline: editor.isActive('underline'),
+        strike: editor.isActive('strike'),
+        superscript: editor.isActive('superscript'),
+        subscript: editor.isActive('subscript'),
+        color: editor.getAttributes('textStyle')?.color || '#000000',
+        highlight: editor.getAttributes('highlight')?.color || null,
+        textAlign: editor.getAttributes('paragraph')?.textAlign || 'left',
+        bulletList: editor.isActive('bulletList'),
+        orderedList: editor.isActive('orderedList'),
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (fallbackEditor) {
+      fallbackEditor.setEditable(role === 'Creator' || role === 'Editor');
+    }
+  }, [fallbackEditor, role]);
 
   const save = useDebouncedCallback((id: number, json: any) => {
     console.log('Saving block:', id, json);
@@ -57,22 +121,20 @@ export const DocumentEditor: React.FC = () => {
       setBlocks(prev => prev.map(p => (p.id === b.id ? b : p)));
     });
 
+    hubConnection.on('ReceiveBlockImage', (blockImage: { id: number; url: string }) => {
+      console.log('Received block image:', blockImage);
+      const editor = editorRefs.current[blockImage.id] || activeEditor || fallbackEditor;
+      if (editor) {
+        editor.chain().focus().setImage({ src: `${baseUrl}/${blockImage.url}` }).run();
+      }
+    });
+
     return () => {
       hubConnection.off('ReceiveBlock');
       hubConnection.off('BlockEdited');
+      hubConnection.off('ReceiveBlockImage');
     };
-  }, [documentId]);
-
-  useEffect(() => {
-    if (canEdit && blocks.length > 0 && !activeEditor && Object.keys(editorRefs.current).length > 0) {
-      const firstBlockId = blocks[0].id;
-      if (editorRefs.current[firstBlockId]) {
-        console.log('Setting active editor for first block:', firstBlockId);
-        setActiveEditor(editorRefs.current[firstBlockId]);
-        activeBlockIdRef.current = firstBlockId;
-      }
-    }
-  }, [blocks, canEdit, activeEditor]);
+  }, [documentId, baseUrl, activeEditor, fallbackEditor]);
 
   const getFileUrl = (filePath: string): string => {
     const normalizedPath = filePath.replace(/^\/+/, '');
@@ -111,9 +173,7 @@ export const DocumentEditor: React.FC = () => {
         userId: 0,
       };
 
-      const blockImage = await sendMessage('SendBlockImage', [request, fileUpload]);
-      const imageUrl = getFileUrl(blockImage.url);
-      insertAtCursor(imageUrl);
+      await sendMessage('SendBlockImage', [request, fileUpload]);
     } catch (error) {
       console.error('❌ Ошибка при вставке изображения:', error);
       alert('Ошибка при загрузке изображения.');
@@ -126,18 +186,26 @@ export const DocumentEditor: React.FC = () => {
     sendMessage('SendBlock', [{ text: '{}', documentId: Number(documentId) }]);
   };
 
+  // Показываем тулбар только если есть валидный редактор
+  if (!activeEditor && !fallbackEditor) {
+    return (
+      <div className="min-h-screen bg-gray-100 w-full">
+        <div className="text-center text-gray-500 py-4">Редактор загружается...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 w-full">
-      {canEdit && activeEditor && (
-        <EditorToolbar
-          editor={activeEditor}
-          onAddBlock={handleAddBlock}
-          currentAttributes={currentAttributes} // Передаем текущие атрибуты
-        />
-      )}
+      <EditorToolbar
+        editor={activeEditor || (fallbackEditor as Editor)}
+        onAddBlock={handleAddBlock}
+        currentAttributes={currentAttributes}
+        setCurrentAttributes={setCurrentAttributes}
+      />
       <div className="flex w-full">
         <main className="mx-auto w-[794px] p-8 flex flex-col space-y-1 bg-white">
-          {blocks.length === 0 && canEdit && (
+          {blocks.length === 0 && (
             <div className="text-center text-gray-500 py-4">Нет блоков для редактирования</div>
           )}
           {blocks.map(block => {
@@ -161,30 +229,43 @@ export const DocumentEditor: React.FC = () => {
             }
 
             return (
-              <div key={block.id} className="border p-2 rounded-sm">
+              <div key={block.id} >
                 <RichTextBlockEditor
                   content={content}
-                  editable={canEdit}
+                  editable={role === 'Creator' || role === 'Editor'}
                   onFocus={() => {
                     console.log('Block focused:', block.id);
-                    activeBlockIdRef.current = block.id;
                     if (editorRefs.current[block.id]) {
                       setActiveEditor(editorRefs.current[block.id]);
+                      setCurrentAttributes({
+                        fontFamily: editorRefs.current[block.id].getAttributes('textStyle')?.fontFamily || 'Times New Roman',
+                        fontSize: editorRefs.current[block.id].getAttributes('textStyle')?.fontSize || 14,
+                        bold: editorRefs.current[block.id].isActive('bold'),
+                        italic: editorRefs.current[block.id].isActive('italic'),
+                        underline: editorRefs.current[block.id].isActive('underline'),
+                        strike: editorRefs.current[block.id].isActive('strike'),
+                        superscript: editorRefs.current[block.id].isActive('superscript'),
+                        subscript: editorRefs.current[block.id].isActive('subscript'),
+                        color: editorRefs.current[block.id].getAttributes('textStyle')?.color || '#000000',
+                        highlight: editorRefs.current[block.id].getAttributes('highlight')?.color || null,
+                        textAlign: editorRefs.current[block.id].getAttributes('paragraph')?.textAlign || 'left',
+                        bulletList: editorRefs.current[block.id].isActive('bulletList'),
+                        orderedList: editorRefs.current[block.id].isActive('orderedList'),
+                      });
                     }
                   }}
                   onEditorReady={(editor) => {
                     console.log('Editor ready for block:', block.id);
                     editorRefs.current[block.id] = editor;
-                    if (!activeEditor && blocks[0]?.id === block.id && canEdit) {
+                    if (!activeEditor && blocks[0]?.id === block.id) {
                       setActiveEditor(editor);
-                      activeBlockIdRef.current = block.id;
                     }
                   }}
                   onChange={json => handleBlockChange(block.id, json)}
                   onImagePaste={(file, insertAtCursor) =>
                     handleImagePaste(block.id, file, insertAtCursor)
                   }
-                  onSelectionUpdate={setCurrentAttributes} // Передаем обработчик
+                  onSelectionUpdate={setCurrentAttributes}
                 />
               </div>
             );

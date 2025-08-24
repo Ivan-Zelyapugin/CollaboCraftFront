@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Editor } from '@tiptap/react';
+import { Editor } from '@tiptap/core';
 import { FaPlus, FaMinus, FaBold, FaItalic, FaStrikethrough, FaUnderline, FaSuperscript, FaSubscript, FaFont, FaFillDrip, FaEraser } from 'react-icons/fa';
 import { MdTextFields } from 'react-icons/md';
 import { FONT_SIZES, fontOptions } from '../../../Ts/constants';
