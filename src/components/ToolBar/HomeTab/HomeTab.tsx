@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { Editor } from '@tiptap/react';
-import { BlocksSection } from './HomeTab/Tsx/BlocksSection';
-import { FontSection } from './HomeTab/Tsx/FontSection';
-import { ParagraphSection } from './HomeTab/Tsx/ParagraphSection';
-import { EditorAttributes } from './HomeTab/Ts/types';
+import { BlocksSection } from './Tsx/BlocksSection';
+import { FontSection } from './Tsx/FontSection';
+import { ParagraphSection } from './Tsx/ParagraphSection';
+import { EditorAttributes } from './Ts/types';
 
 interface HomeTabProps {
   editor: Editor;

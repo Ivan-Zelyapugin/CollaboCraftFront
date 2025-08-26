@@ -6,13 +6,3 @@ export interface Block {
   sentOn: string;
   editedOn?: string;
 }
-
-export interface SendBlockRequest {
-  text: string;
-  documentId: number;
-}
-
-export interface EditBlockRequest {
-  id: number;
-  editedText: string;
-}

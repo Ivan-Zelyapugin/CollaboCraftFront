@@ -1,4 +1,4 @@
-import { BulletListStyle, OrderedListStyle } from '../tsx/HomeTab/Ts/types';
+import { BulletListStyle, OrderedListStyle } from './types';
 
 export const FONT_SIZES = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64];
 

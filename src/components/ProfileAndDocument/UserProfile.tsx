@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getMe, updateMe, changePassword, User, ChangePassword } from '../api/user';
+import { getMe, updateMe, changePassword, User, ChangePassword } from '../../api/user';
 
 export const UserProfile: React.FC = () => {
   const [user, setUser] = useState<User>({

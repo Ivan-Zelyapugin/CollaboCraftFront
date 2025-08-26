@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import { FaPlus } from 'react-icons/fa6';
 import { FaTrash } from 'react-icons/fa6';
 import { FaGear } from 'react-icons/fa6';
-import { getMyDocuments, getDocumentDetails } from '../api/document';
-import { Document, UserDocumentDto, DocumentRole, DocumentDetails, DocumentParticipantFull } from '../models/document';
-import { sendMessage, hubConnection } from '../api/signalr';
-import { startConnection } from '../api/signalr';
+import { getMyDocuments, getDocumentDetails } from '../../api/document';
+import { Document, UserDocumentDto, DocumentRole, DocumentDetails, DocumentParticipantFull } from '../../models/document';
+import { sendMessage, hubConnection } from '../../api/signalr';
+import { startConnection } from '../../api/signalr';
 
 interface DocumentListProps {
   onLogout: () => void;

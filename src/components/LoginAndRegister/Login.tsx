@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { LoginModel } from '../models/auth';
+import { LoginModel } from '../../models/auth';
 
 interface LoginProps {
   onLogin: (model: LoginModel) => Promise<void>;
@@ -13,7 +13,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null); // Сбрасываем ошибку перед новым запросом
+    setError(null); 
     if (!login) {
       setError('Имя пользователя или Email обязателен.');
       return;
@@ -26,7 +26,6 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     try {
       await onLogin({ login, password });
     } catch (err: any) {
-      // Извлекаем сообщение об ошибке из ответа сервера
       const errorMessage = err.response?.data?.error || 'Произошла ошибка при входе. Пожалуйста, попробуйте снова.';
       setError(errorMessage);
     }

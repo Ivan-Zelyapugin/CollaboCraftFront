@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { RegisterModel } from '../models/auth';
+import { RegisterModel } from '../../models/auth';
 
 interface RegisterProps {
   onRegister: (model: RegisterModel) => void;
@@ -16,7 +16,7 @@ export const Register: React.FC<RegisterProps> = ({ onRegister }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null); // Сбрасываем ошибку перед новым запросом
+    setError(null); 
     
     if (!email) {
       setError('Email обязателен.');

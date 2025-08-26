@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { Login } from './components/Login';
-import { Register } from './components/Register';
-import { DocumentList } from './components/DocumentList';
-import { DocumentEditor } from './components/DocumentEditor';
+import { Login } from './components/LoginAndRegister/Login';
+import { Register } from './components/LoginAndRegister/Register';
+import { DocumentList } from './components/ProfileAndDocument/DocumentList';
+import { DocumentEditor } from './components/Editor/DocumentEditor';
 import * as authApi from './api/auth';
 import { startConnection, stopConnection, sendMessage, hubConnection } from './api/signalr';
 import { LoginModel, RegisterModel } from './models/auth';
-import { UserProfile } from './components/UserProfile';
+import { UserProfile } from './components/ProfileAndDocument/UserProfile';
 
 const AppContent: React.FC = () => {
   const [token, setToken] = useState<string | null>(null);

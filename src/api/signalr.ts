@@ -11,7 +11,6 @@ export const hubConnection = new signalR.HubConnectionBuilder()
 
 let isConnecting = false;
 
-// В api/signalr.ts
 export const sendMessage = async (method: string, args: any[]) => {
   try {
     return await hubConnection.invoke(method, ...args);
@@ -19,7 +18,6 @@ export const sendMessage = async (method: string, args: any[]) => {
     throw err;
   }
 };
-
 
 export const startConnection = async () => {
   if (isConnecting || hubConnection.state !== signalR.HubConnectionState.Disconnected) {

@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { Editor } from '@tiptap/react';
 import { FaAlignLeft, FaAlignRight, FaAlignCenter, FaAlignJustify, FaListUl, FaListOl } from 'react-icons/fa';
-import { bulletListStyles, orderedListStyles } from '../../../Ts/constants';
+import { bulletListStyles, orderedListStyles } from '../Ts/constants';
 import { EditorAttributes, BulletListStyle, OrderedListStyle } from '../Ts/types';
 
 interface ParagraphSectionProps {

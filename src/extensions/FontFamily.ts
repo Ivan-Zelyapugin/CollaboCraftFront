@@ -1,5 +1,4 @@
 import { Extension, CommandProps } from '@tiptap/core'
-import { TextStyle } from '@tiptap/extension-text-style'
 
 export const FontFamily = Extension.create({
   name: 'fontFamily',

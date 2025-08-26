@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Editor } from '@tiptap/react';
-import { FileTab } from './ToolBar/tsx/FileTab';
-import { HomeTab } from './ToolBar/tsx/HomeTab';
-import { InsertTab } from './ToolBar/tsx/InsertTab';
-import { LayoutTab } from './ToolBar/tsx/LayoutTab';
-import { EditorAttributes } from './ToolBar/tsx/HomeTab/Ts/types';
+import { FileTab } from './FileTab/FileTab';
+import { HomeTab } from './HomeTab/HomeTab';
+import { InsertTab } from './InsertTab/InsertTab';
+import { LayoutTab } from './LayoutTab/LayoutTab';
+import { EditorAttributes } from './HomeTab/Ts/types';
 
 interface EditorToolbarProps {
   editor: Editor;
