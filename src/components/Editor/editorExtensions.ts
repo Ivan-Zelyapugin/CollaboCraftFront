@@ -1,5 +1,11 @@
 // editorExtensions.ts
 import StarterKit from '@tiptap/starter-kit';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableHeader from '@tiptap/extension-table-header';
+import TableCell from '@tiptap/extension-table-cell';
+
+
 import TextStyle from '@tiptap/extension-text-style';
 import { FontFamily } from '../../extensions/FontFamily';
 import { FontSize } from '../../extensions/FontSize';
@@ -31,6 +37,13 @@ export const commonExtensions = [
   Underline,
   CustomParagraph,
   Subscript,
+  Table.configure({
+      resizable: true,
+    }),
+    TableRow,
+    TableHeader,
+    TableCell,
+
   Superscript,
   Heading.configure({ levels: [1, 2, 3, 4, 5, 6] }),
 ];

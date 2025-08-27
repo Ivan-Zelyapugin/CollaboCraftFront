@@ -4,6 +4,7 @@ import { BlocksSection } from './Tsx/BlocksSection';
 import { FontSection } from './Tsx/FontSection';
 import { ParagraphSection } from './Tsx/ParagraphSection';
 import { EditorAttributes } from './Ts/types';
+import { InsertTab } from './Tsx/InsertSection'
 
 interface HomeTabProps {
   editor: Editor;
@@ -72,6 +73,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({
         bulletListDropdownRef={bulletListDropdownRef}
         orderedListDropdownRef={orderedListDropdownRef}
       />
+      <InsertTab
+        editor={editor}
+      />
+
     </div>
   );
 };

@@ -93,3 +93,22 @@ ol.list-decimal-level-3 {
   list-style-type: lower-alpha;
   margin-left: 40px;
 }
+
+.ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+  border: 2px solid #000; /* Черные линии для внешней границы таблицы */
+}
+
+.ProseMirror th,
+.ProseMirror td {
+  border: 1px solid #000; /* Черные линии для ячеек */
+  padding: 8px;
+  text-align: left;
+}
+
+.ProseMirror th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
