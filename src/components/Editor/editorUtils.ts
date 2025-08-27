@@ -17,5 +17,13 @@ export function getEditorAttributes(editor: Editor): EditorAttributes {
     textAlign: editor.getAttributes('paragraph')?.textAlign || 'left',
     bulletList: editor.isActive('bulletList'),
     orderedList: editor.isActive('orderedList'),
+
+    indent: editor.getAttributes('paragraph')?.indent || 0,
+    indentLeft: editor.getAttributes('paragraph')?.indentLeft || 0,
+    indentRight: editor.getAttributes('paragraph')?.indentRight || 0,
+    indentFirstLine: editor.getAttributes('paragraph')?.indentFirstLine || 0,
+    spacingBefore: editor.getAttributes('paragraph')?.spacingBefore || 0,
+    spacingAfter: editor.getAttributes('paragraph')?.spacingAfter || 0,
+    lineHeight: editor.getAttributes('paragraph')?.lineHeight || 1.5,
   };
 }

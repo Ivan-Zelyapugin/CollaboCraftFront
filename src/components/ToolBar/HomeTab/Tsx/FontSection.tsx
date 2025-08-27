@@ -125,7 +125,7 @@ export const FontSection: React.FC<FontSectionProps> = ({
     .filter((f: FontOption) => f.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
-    <div className="flex flex-col max-w-max">
+    <div className="flex flex-col border-r pr-4 max-w-max">
       <span className="text-sm font-semibold text-gray-500 mb-1">Шрифт</span>
       <div className="flex flex-col gap-2">
         <div className="flex gap-4 items-center flex-wrap">

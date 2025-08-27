@@ -1,9 +1,22 @@
 // src/components/ToolBar/tsx/HomeTab/ParagraphSection.tsx
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Editor } from '@tiptap/react';
-import { FaAlignLeft, FaAlignRight, FaAlignCenter, FaAlignJustify, FaListUl, FaListOl } from 'react-icons/fa';
+import {
+  FaAlignLeft,
+  FaAlignRight,
+  FaAlignCenter,
+  FaAlignJustify,
+  FaListUl,
+  FaListOl,
+  FaIndent,
+  FaOutdent,
+  FaGear,
+} from 'react-icons/fa6';
 import { bulletListStyles, orderedListStyles } from '../Ts/constants';
 import { EditorAttributes, BulletListStyle, OrderedListStyle } from '../Ts/types';
+import ParagraphSettingsModal from './ParagraphSettingsModal';
+
+const DEFAULT_TAB = 47;
 
 interface ParagraphSectionProps {
   editor: Editor;
@@ -26,6 +39,7 @@ export const ParagraphSection: React.FC<ParagraphSectionProps> = ({
 }) => {
   const [bulletListDropdownOpen, setBulletListDropdownOpenLocal] = useState(false);
   const [orderedListDropdownOpen, setOrderedListDropdownOpenLocal] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const currentTextAlign = currentAttributes.textAlign || 'left';
 
@@ -38,29 +52,36 @@ export const ParagraphSection: React.FC<ParagraphSectionProps> = ({
     }
   };
 
+  const changeIndent = (delta: number) => {
+  const currentIndent = currentAttributes.indentLeft || 0;
+  const newIndent = Math.max(0, currentIndent + delta* DEFAULT_TAB);
+  editor.chain().focus().updateAttributes('paragraph', { indentLeft: newIndent }).run();
+  updateAttributes({ indentLeft: newIndent });
+};
+
   const setTextAlign = (align: 'left' | 'right' | 'center' | 'justify') => {
     editor.chain().focus().setTextAlign(align).run();
     updateAttributes({ textAlign: align });
   };
 
   const setBulletList = (style: string) => {
-  if (style === 'none') {
-    if (editor.isActive('bulletList')) {
+    if (style === 'none') {
+      if (editor.isActive('bulletList')) {
+        editor.chain().focus().toggleBulletList().run();
+      }
+      updateAttributes({ bulletList: false });
+    } else {
       editor.chain().focus().toggleBulletList().run();
+      if (editor.isActive('bulletList')) {
+        editor.commands.setNode('bulletList', {
+          class: `list-${style}`,
+        });
+      }
+      updateAttributes({ bulletList: editor.isActive('bulletList') });
     }
-    updateAttributes({ bulletList: false });
-  } else {
-    editor.chain().focus().toggleBulletList().run();
-    if (editor.isActive('bulletList')) {
-      editor.commands.setNode('bulletList', {
-        class: `list-${style}`,
-      });
-    }
-    updateAttributes({ bulletList: editor.isActive('bulletList') });
-  }
-  setBulletListDropdownOpenLocal(false);
-  setBulletListDropdownOpen?.(false);
-};
+    setBulletListDropdownOpenLocal(false);
+    setBulletListDropdownOpen?.(false);
+  };
 
   const setOrderedList = (level: number, style: string) => {
     if (style === 'none') {
@@ -71,10 +92,9 @@ export const ParagraphSection: React.FC<ParagraphSectionProps> = ({
     } else {
       editor.chain().focus().toggleOrderedList().run();
       if (editor.isActive('orderedList')) {
-        const cssStyle = level === 1 ? 'decimal' : level === 2 ? 'lower-roman' : 'lower-alpha';
         editor.commands.setNode('orderedList', {
-  class: `list-${style}-level-${level}`,
-});
+          class: `list-${style}-level-${level}`,
+        });
       }
       updateAttributes({ orderedList: editor.isActive('orderedList') });
     }
@@ -83,9 +103,20 @@ export const ParagraphSection: React.FC<ParagraphSectionProps> = ({
   };
 
   return (
-    <div className="flex flex-col max-w-max">
-      <span className="text-sm font-semibold text-gray-500 mb-1">Абзац</span>
-      <div className="flex gap-2 flex-wrap items-center">
+    <div className="flex flex-col border-r pr-4 max-w-max relative">
+      <span className="text-sm font-semibold text-gray-500 mb-1 flex items-center justify-between">
+        Абзац
+        <button
+          type="button"
+          onClick={() => setIsSettingsOpen(true)}
+          className="ml-2 p-1 hover:bg-gray-200 rounded"
+          title="Параметры абзаца"
+        >
+          <FaGear />
+        </button>
+      </span>
+      <div className="flex gap-4 items-center flex-wrap">
+        {/* Выравнивание */}
         <button
           type="button"
           onClick={() => setTextAlign('left')}
@@ -118,6 +149,27 @@ export const ParagraphSection: React.FC<ParagraphSectionProps> = ({
         >
           <FaAlignJustify />
         </button>
+      </div>
+      <div className="flex gap-4 items-center flex-wrap">
+        {/* Отступы */}
+        <button
+          type="button"
+          onClick={() => changeIndent(+1)}
+          className="p-2 rounded hover:bg-gray-200"
+          title="Увеличить отступ"
+        >
+          <FaIndent />
+        </button>
+        <button
+          type="button"
+          onClick={() => changeIndent(-1)}
+          className="p-2 rounded hover:bg-gray-200"
+          title="Уменьшить отступ"
+        >
+          <FaOutdent />
+        </button>
+
+        {/* Маркированный список */}
         <div className="relative" ref={bulletListDropdownRef}>
           <button
             type="button"
@@ -131,25 +183,27 @@ export const ParagraphSection: React.FC<ParagraphSectionProps> = ({
             <FaListUl />
           </button>
           {bulletListDropdownOpen && (
-  <div className="absolute z-50 bg-white border rounded shadow mt-1 w-40">
-    {bulletListStyles.map((style: BulletListStyle) => (
-      <button
-        key={style.value}
-        type="button"
-        onClick={() => setBulletList(style.value)}
-        className={`w-full text-left px-4 py-2 hover:bg-gray-100 ${
-          editor.isActive('bulletList') && 
-          editor.getAttributes('bulletList').class?.includes(`list-${style.value}`)
-            ? 'bg-blue-100'
-            : ''
-        }`}
-      >
-        {style.name}
-      </button>
-    ))}
-  </div>
-)}
+            <div className="absolute z-50 bg-white border rounded shadow mt-1 w-40">
+              {bulletListStyles.map((style: BulletListStyle) => (
+                <button
+                  key={style.value}
+                  type="button"
+                  onClick={() => setBulletList(style.value)}
+                  className={`w-full text-left px-4 py-2 hover:bg-gray-100 ${
+                    editor.isActive('bulletList') &&
+                    editor.getAttributes('bulletList').class?.includes(`list-${style.value}`)
+                      ? 'bg-blue-100'
+                      : ''
+                  }`}
+                >
+                  {style.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Нумерованный список */}
         <div className="relative" ref={orderedListDropdownRef}>
           <button
             type="button"
@@ -178,6 +232,17 @@ export const ParagraphSection: React.FC<ParagraphSectionProps> = ({
           )}
         </div>
       </div>
+
+      {isSettingsOpen && (
+  <ParagraphSettingsModal
+    initialValues={currentAttributes}   // ✅ сюда попадут уже обновлённые indentLeft
+    onClose={() => setIsSettingsOpen(false)}
+    onSave={(settings) => {
+      editor.chain().focus().updateAttributes('paragraph', settings).run();
+      updateAttributes(settings);
+    }}
+  />
+)}
     </div>
   );
 };

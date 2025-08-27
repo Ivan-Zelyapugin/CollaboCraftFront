@@ -12,6 +12,15 @@ export interface EditorAttributes {
   textAlign?: 'left' | 'right' | 'center' | 'justify';
   bulletList?: boolean;
   orderedList?: boolean;
+
+  // ✨ Новые поля для абзацев
+  indent?: number;              // текущий отступ (кол-во шагов)
+  indentLeft?: number;          // отступ слева
+  indentRight?: number;         // отступ справа
+  indentFirstLine?: number;     // отступ первой строки
+  spacingBefore?: number;       // интервал перед абзацем
+  spacingAfter?: number;        // интервал после абзаца
+  lineHeight?: number;          // межстрочный интервал
 }
 
 export type FontOption = string;

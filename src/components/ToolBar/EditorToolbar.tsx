@@ -5,15 +5,17 @@ import { HomeTab } from './HomeTab/HomeTab';
 import { InsertTab } from './InsertTab/InsertTab';
 import { LayoutTab } from './LayoutTab/LayoutTab';
 import { EditorAttributes } from './HomeTab/Ts/types';
+import { Block } from '../../models/block'
 
 interface EditorToolbarProps {
   editor: Editor;
   onAddBlock: () => void;
   currentAttributes: EditorAttributes;
   setCurrentAttributes?: (attributes: EditorAttributes) => void;
+  blocks: Block[];
 }
 
-export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, onAddBlock, currentAttributes, setCurrentAttributes }) => {
+export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, onAddBlock, currentAttributes, setCurrentAttributes, blocks }) => {
   const [activeTab, setActiveTab] = useState<'file' | 'home' | 'insert' | 'layout'>('home');
   const [showFileMenu, setShowFileMenu] = useState(false);
 
@@ -70,7 +72,14 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, onAddBlock
       </div>
 
       <div className="flex flex-wrap gap-4 relative">
-        {activeTab === 'file' && <FileTab showFileMenu={showFileMenu} setShowFileMenu={setShowFileMenu} />}
+        {activeTab === 'file' && (
+          <FileTab
+            editor={editor} // пробрасываем редактор
+            showFileMenu={showFileMenu}
+            setShowFileMenu={setShowFileMenu}
+            blocks={blocks}
+          />
+        )}
         {activeTab === 'home' && (
           <HomeTab
             editor={editor}

@@ -14,9 +14,10 @@ import Underline from '@tiptap/extension-underline';
 import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
 import Heading from '@tiptap/extension-heading';
+import { CustomParagraph } from '../../extensions/CustomParagraph'
 
 export const commonExtensions = [
-  StarterKit.configure({ history: false, bulletList: false, orderedList: false, heading: false }),
+  StarterKit.configure({ history: false, bulletList: false, orderedList: false, heading: false, paragraph: false }),
   TextStyle,
   FontFamily,
   FontSize,
@@ -28,6 +29,7 @@ export const commonExtensions = [
   OrderedList.configure({ HTMLAttributes: { class: 'list-decimal pl-6' } }),
   ListItem,
   Underline,
+  CustomParagraph,
   Subscript,
   Superscript,
   Heading.configure({ levels: [1, 2, 3, 4, 5, 6] }),

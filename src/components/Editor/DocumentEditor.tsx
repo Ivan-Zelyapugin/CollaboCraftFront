@@ -149,6 +149,7 @@ export const DocumentEditor: React.FC = () => {
         onAddBlock={handleAddBlock}
         currentAttributes={currentAttributes}
         setCurrentAttributes={setCurrentAttributes}
+        blocks={blocks}
       />
       <div className="flex w-full">
         <main className="mx-auto w-[794px] p-8 flex flex-col space-y-1 bg-white">

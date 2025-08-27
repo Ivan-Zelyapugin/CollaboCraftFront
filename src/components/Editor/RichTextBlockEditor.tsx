@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { EditorContent, useEditor, Editor } from '@tiptap/react';
 import { commonExtensions } from './editorExtensions';
 import { getEditorAttributes } from './editorUtils'
+
 interface Props {
   content: any;
   editable: boolean;
