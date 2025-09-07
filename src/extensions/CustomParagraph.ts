@@ -59,13 +59,13 @@ export const CustomParagraph = Paragraph.extend({
     // Приоритет: если задан indentLeft (пиксели) — используем его,
     // иначе используем шаговый indent (steps * 24px)
     if (attrs.indentLeft && attrs.indentLeft > 0) {
-      styles.push(`margin-left: ${attrs.indentLeft * DEFAULT_TAB}px`);
+      styles.push(`margin-left: ${attrs.indentLeft }px`);
     } else if (attrs.indent && attrs.indent > 0) {
       styles.push(`margin-left: ${attrs.indent * 24}px`);
     }
 
     if (attrs.indentRight && attrs.indentRight > 0) {
-      styles.push(`margin-right: ${attrs.indentRight * DEFAULT_TAB}px`);
+      styles.push(`margin-right: ${attrs.indentRight }px`);
     }
 
     if (attrs.indentFirstLine && attrs.indentFirstLine > 0) {

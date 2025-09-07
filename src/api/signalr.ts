@@ -1,7 +1,7 @@
 import * as signalR from '@microsoft/signalr';
 
 export const hubConnection = new signalR.HubConnectionBuilder()
-  .withUrl('http://localhost:8080/documenthub', {
+  .withUrl(`/documenthub`, {
     accessTokenFactory: () => localStorage.getItem('accessToken') || '',
     skipNegotiation: true,
     transport: signalR.HttpTransportType.WebSockets,

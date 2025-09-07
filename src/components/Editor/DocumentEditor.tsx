@@ -14,7 +14,7 @@ import { EditorAttributes } from '../ToolBar/HomeTab/Ts/types';
 import { getEditorAttributes } from './editorUtils'
 
 export const DocumentEditor: React.FC = () => {
-  const baseUrl = 'http://localhost:9000';
+  const baseUrl = '/minio';
   const { documentId } = useParams<{ documentId: string }>();
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [role, setRole] = useState<DocumentRole | null>(null);
@@ -73,13 +73,29 @@ export const DocumentEditor: React.FC = () => {
       setBlocks(prev => prev.map(p => (p.id === b.id ? b : p)));
     });
 
-    hubConnection.on('ReceiveBlockImage', (blockImage: { id: number; url: string }) => {
-      console.log('Received block image:', blockImage);
-      const editor = editorRefs.current[blockImage.id] || activeEditor || fallbackEditor;
-      if (editor) {
-        editor.chain().focus().setImage({ src: `${baseUrl}/${blockImage.url}` }).run();
-      }
-    });
+   hubConnection.on('ReceiveBlockImage', (blockImage: { id: number; url: string }) => {
+  const editor = editorRefs.current[blockImage.id] || activeEditor || fallbackEditor;
+  if (!editor) return;
+
+  // Вставляем пустой параграф, чтобы вставить изображение после курсора
+  const { state, view } = editor;
+  const { tr, selection } = state;
+
+  console.log(blockImage.id);
+  // создаём узел изображения с любыми атрибутами
+  const imageNode = state.schema.nodes.image.create({
+    src: `${baseUrl}/${blockImage.url}`,
+    width: 300,
+    height: 200,
+    imageId: blockImage.id, // здесь TS не ругается, т.к. напрямую через create
+  });
+
+  // вставляем узел после текущей позиции курсора
+  const transaction = tr.insert(selection.to, imageNode);
+  view.dispatch(transaction);
+  editor.view.focus();
+});
+
 
     return () => {
       hubConnection.off('ReceiveBlock');

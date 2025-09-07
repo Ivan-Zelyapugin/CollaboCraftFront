@@ -1,8 +1,7 @@
 import axios from 'axios';
-import * as signalR from '@microsoft/signalr';
 
 export const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: '/api',
 });
 
 api.interceptors.request.use((config) => {
@@ -13,12 +12,37 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Обрабатываем 401 Unauthorized
 api.interceptors.response.use(
-  (res) => res,
-  (error) => {
+  res => res,
+  async (error) => {
     if (error.response?.status === 401) {
-      console.error('401 Unauthorized - возможно, токен истёк');
+      console.warn('401 Unauthorized - возможно, токен истёк');
+      try {
+        await refreshAccessToken(); // функция ниже
+        return api(error.config);    // повторяем исходный запрос
+      } catch {
+        console.error('❌ Не удалось обновить токен');
+        // здесь можно редирект на логин
+      }
     }
     return Promise.reject(error);
   }
 );
+
+export const refreshAccessToken = async () => {
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) throw new Error('Нет refresh токена');
+
+  const res = await axios.put(`/api/auth/refresh-token/${refreshToken}`);
+  const { accessToken, refreshToken: newRefreshToken } = res.data;
+
+  localStorage.setItem('accessToken', accessToken);
+
+  // Обновляем refresh token только если сервер прислал новый
+  if (newRefreshToken && newRefreshToken !== refreshToken) {
+    localStorage.setItem('refreshToken', newRefreshToken);
+  }
+
+  return accessToken;
+};
